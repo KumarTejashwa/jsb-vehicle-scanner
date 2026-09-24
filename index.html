@@ -38,8 +38,9 @@
     }
 
     #status {
-      margin-top: 15px;
+      margin-top: 20px;
       font-weight: bold;
+      word-break: break-word;
     }
   </style>
 </head>
@@ -55,7 +56,7 @@
   <div id="reader"></div>
 
   <div id="status">
-    Starting camera...
+    Ready to scan...
   </div>
 
 </div>
@@ -64,43 +65,96 @@
 
 const statusText = document.getElementById("status");
 
+const APPS_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbwZMSK77tZ9Ko7UMNzbHqM7jnORYW4uDnR2Toz2Db3k/dev";
+
+const urlParams = new URLSearchParams(window.location.search);
+
+const sessionToken = urlParams.get("token");
+
+let scanner;
+
 function onScanSuccess(decodedText, decodedResult) {
 
-  statusText.innerText =
-    "QR SCANNED: " + decodedText;
-
-  // Stop scanning after successful scan
-  html5QrcodeScanner.clear().then(() => {
+  if (!sessionToken) {
 
     statusText.innerText =
-      "QR scanned successfully.";
+      "ERROR: Guard session missing. Please login again.";
+
+    return;
+  }
+
+  statusText.innerText =
+    "QR scanned. Processing...";
+
+  scanner.clear().then(() => {
+
+    let vehicleId = "";
+
+    try {
+
+      const scannedUrl = new URL(decodedText);
+
+      vehicleId =
+        scannedUrl.searchParams.get("id") || "";
+
+    } catch (error) {
+
+      statusText.innerText =
+        "Invalid vehicle QR code.";
+
+      return;
+    }
+
+    if (!vehicleId) {
+
+      statusText.innerText =
+        "Vehicle ID not found in QR code.";
+
+      return;
+    }
+
+    statusText.innerText =
+      "Vehicle " + vehicleId + " found. Recording...";
+
+    const recordUrl =
+      APPS_SCRIPT_URL +
+      "?action=record" +
+      "&vehicleId=" +
+      encodeURIComponent(vehicleId) +
+      "&token=" +
+      encodeURIComponent(sessionToken);
+
+    window.location.href = recordUrl;
 
   }).catch(error => {
 
-    console.log(error);
+    console.error(error);
+
+    statusText.innerText =
+      "Scanner error. Please try again.";
 
   });
 
 }
 
 function onScanFailure(error) {
-  // Ignore normal scanning failures
+  // Normal scanning failures are ignored.
 }
 
-const html5QrcodeScanner =
-  new Html5QrcodeScanner(
-    "reader",
-    {
-      fps: 10,
-      qrbox: {
-        width: 250,
-        height: 250
-      }
-    },
-    false
-  );
+scanner = new Html5QrcodeScanner(
+  "reader",
+  {
+    fps: 10,
+    qrbox: {
+      width: 250,
+      height: 250
+    }
+  },
+  false
+);
 
-html5QrcodeScanner.render(
+scanner.render(
   onScanSuccess,
   onScanFailure
 );
