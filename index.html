@@ -1,1 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JSB Gate Scanner</title>
 
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .box {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    }
+
+    h1 {
+      font-size: 22px;
+    }
+
+    h2 {
+      font-size: 18px;
+    }
+
+    #reader {
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+
+  <h1>JSB BOROOAH GREEN HOUSING SOCIETY</h1>
+
+  <h2>GATE SCANNER</h2>
+
+  <div id="reader"></div>
+
+  <div id="status">
+    Starting camera...
+  </div>
+
+</div>
+
+<script>
+
+const statusText = document.getElementById("status");
+
+function onScanSuccess(decodedText, decodedResult) {
+
+  statusText.innerText =
+    "QR SCANNED: " + decodedText;
+
+  // Stop scanning after successful scan
+  html5QrcodeScanner.clear().then(() => {
+
+    statusText.innerText =
+      "QR scanned successfully.";
+
+  }).catch(error => {
+
+    console.log(error);
+
+  });
+
+}
+
+function onScanFailure(error) {
+  // Ignore normal scanning failures
+}
+
+const html5QrcodeScanner =
+  new Html5QrcodeScanner(
+    "reader",
+    {
+      fps: 10,
+      qrbox: {
+        width: 250,
+        height: 250
+      }
+    },
+    false
+  );
+
+html5QrcodeScanner.render(
+  onScanSuccess,
+  onScanFailure
+);
+
+</script>
+
+</body>
+</html>
